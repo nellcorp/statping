@@ -294,7 +294,7 @@ publish-homebrew:
 publish:
 	docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
 	docker buildx build --build-arg VERSION=${VERSION} \
-	--platform linux/amd64,linux/arm64 -t nellcorp/statping:base -f Dockerfile.base --push .
+	--platform linux/amd64,linux/arm64 -t nellcorp/statping:base --push .
 
 	docker buildx build --build-arg VERSION=${VERSION} \
 	--no-cache --platform linux/amd64,linux/arm64 \
