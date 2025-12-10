@@ -1,4 +1,4 @@
-VERSION=$(shell cat version.txt)
+VERSION=0.93.0
 COMMIT=$(shell git rev-parse HEAD)
 SIGN_KEY=B76D61FAA6DB759466E83D9964B9C6AAE2D55278
 BINARY_NAME=statping
@@ -114,10 +114,10 @@ db-down:
 console:
 	docker exec -t -i statping /bin/sh
 
-compose-build-full: 
+compose-build-full:
 	docker compose -f docker-compose.yml -f dev/docker-compose.full.yml build --parallel --build-arg VERSION=${VERSION}
 
-docker-latest: 
+docker-latest:
 	docker build -t statping-ng/statping-ng:latest --build-arg VERSION=${VERSION} .
 
 docker-test:
@@ -290,6 +290,16 @@ post-release: frontend-build upload_to_s3 publish-homebrew dockerhub
 # update the homebrew application to latest for mac
 publish-homebrew:
 	curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/json" -H "Travis-API-Version: 3" -H "Authorization: token $(TRAVIS_API)" -d $(PUBLISH_BODY) https://api.travis-ci.com/repo/statping%2Fhomebrew-statping/requests
+
+publish:
+	docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+	docker buildx build --build-arg VERSION=${VERSION} \
+	--platform linux/amd64,linux/arm64 -t nellcorp/statping:base -f Dockerfile.base --push .
+
+	docker buildx build --build-arg VERSION=${VERSION} \
+	--no-cache --platform linux/amd64,linux/arm64 \
+	-t nellcorp/statping:v${VERSION} \
+	-t nellcorp/statping:latest . --push
 
 upload_to_s3:
 	tar -czvf source.tar.gz source/
